@@ -1,0 +1,21 @@
+{
+  "name": "moralis",
+  "version": "1.0.0",
+  "description": "Moralis API E2E Tests - QA Engineer Practical Exercise",
+  "private": true,
+  "scripts": {
+    "test": "cucumber-js --require-module tsconfig-paths/register --config=api/config/cucumber.cjs",
+    "test_wip": "cucumber-js --require-module tsconfig-paths/register --config=api/config/cucumber.cjs --tags @wip"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^11.3.0",
+    "ajv": "^8.17.1",
+    "dotenv": "^17.2.3",
+    "node-fetch-cjs": "^3.3.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.2.0"
+  }
+}

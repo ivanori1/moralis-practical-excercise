@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["result"],
+  "properties": {
+    "result": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "hash",
+          "nonce",
+          "transaction_index",
+          "from_address",
+          "to_address",
+          "value",
+          "gas",
+          "gas_price",
+          "receipt_cumulative_gas_used",
+          "receipt_gas_used",
+          "receipt_contract_address",
+          "receipt_status",
+          "block_timestamp",
+          "block_number",
+          "block_hash"
+        ],
+        "properties": {
+          "hash": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{64}$"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "transaction_index": {
+            "type": "string"
+          },
+          "from_address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "to_address": {
+            "type": ["string", "null"],
+            "pattern": "^0x[a-fA-F0-9]{40}$|^$"
+          },
+          "value": {
+            "type": "string"
+          },
+          "gas": {
+            "type": "string"
+          },
+          "gas_price": {
+            "type": "string"
+          },
+          "input": {
+            "type": "string"
+          },
+          "receipt_cumulative_gas_used": {
+            "type": "string"
+          },
+          "receipt_gas_used": {
+            "type": "string"
+          },
+          "receipt_contract_address": {
+            "type": ["string", "null"]
+          },
+          "receipt_root": {
+            "type": ["string", "null"]
+          },
+          "receipt_status": {
+            "type": "string",
+            "pattern": "^0|1$"
+          },
+          "block_timestamp": {
+            "type": "string"
+          },
+          "block_number": {
+            "type": "string"
+          },
+          "block_hash": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{64}$"
+          },
+          "transfers": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "logs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "decoded_call": {
+            "type": "object"
+          },
+          "category": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "method_hash": {
+            "type": "string"
+          },
+          "method_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "total": {
+      "type": "number"
+    },
+    "page": {
+      "type": "number"
+    },
+    "page_size": {
+      "type": "number"
+    }
+  }
+}
+
+

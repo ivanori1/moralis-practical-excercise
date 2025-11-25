@@ -1,0 +1,963 @@
+{
+	"info": {
+		"_postman_id": "moralis-wallet-history-api",
+		"name": "Moralis Wallet History API",
+		"description": "Postman collection for Moralis Wallet History API endpoint testing. Based on Cucumber BDD test scenarios.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Basic Requests",
+			"item": [
+				{
+					"name": "Get wallet history - Default parameters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains result array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth",
+									"description": "Chain to query (eth, polygon, bsc, etc.)"
+								}
+							]
+						},
+						"description": "Get wallet history with default parameters. Uses Vitalik's address as test wallet."
+					},
+					"response": []
+				},
+				{
+					"name": "Get wallet history - With limit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains at most 5 transactions\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.length).to.be.at.most(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth&limit=5",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								},
+								{
+									"key": "limit",
+									"value": "5",
+									"description": "Number of transactions to return"
+								}
+							]
+						},
+						"description": "Get wallet history with limit parameter set to 5."
+					},
+					"response": []
+				},
+				{
+					"name": "Get wallet history - With block range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+								"pm.test(\"All transactions are within block range\", function () {",
+								"    var jsonData = pm.response.json();",
+								"    var fromBlock = parseInt(pm.collectionVariables.get('FROM_BLOCK') || pm.environment.get('FROM_BLOCK') || '18000000');",
+								"    var toBlock = parseInt(pm.collectionVariables.get('TO_BLOCK') || pm.environment.get('TO_BLOCK') || '18000010');",
+								"    ",
+								"    var outOfRangeTransactions = [];",
+								"    ",
+								"    jsonData.result.forEach(function(tx, index) {",
+								"        // Handle both hex (0x...) and decimal string formats",
+								"        var blockNum;",
+								"        if (typeof tx.block_number === 'string' && tx.block_number.startsWith('0x')) {",
+								"            blockNum = parseInt(tx.block_number, 16);",
+								"        } else if (typeof tx.block_number === 'string') {",
+								"            blockNum = parseInt(tx.block_number, 10);",
+								"        } else {",
+								"            blockNum = parseInt(tx.block_number);",
+								"        }",
+								"        ",
+								"        if (blockNum < fromBlock || blockNum > toBlock) {",
+								"            outOfRangeTransactions.push({",
+								"                index: index,",
+								"                hash: tx.hash,",
+								"                block_number: tx.block_number,",
+								"                parsed_block_number: blockNum",
+								"            });",
+								"        }",
+								"    });",
+								"    ",
+								"    if (outOfRangeTransactions.length > 0) {",
+								"        var errorMsg = 'Found ' + outOfRangeTransactions.length + ' transaction(s) outside block range [' + fromBlock + ', ' + toBlock + ']:\\n';",
+								"        outOfRangeTransactions.forEach(function(tx) {",
+								"            errorMsg += '  - Transaction #' + tx.index + ' (hash: ' + tx.hash + ') has block_number: ' + tx.block_number + ' (parsed: ' + tx.parsed_block_number + ')\\n';",
+								"        });",
+								"        pm.expect(outOfRangeTransactions.length, errorMsg).to.equal(0);",
+								"    }",
+								"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth&from_block={{FROM_BLOCK}}&to_block={{TO_BLOCK}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								},
+								{
+									"key": "from_block",
+									"value": "{{FROM_BLOCK}}",
+									"description": "Start block number"
+								},
+								{
+									"key": "to_block",
+									"value": "{{TO_BLOCK}}",
+									"description": "End block number"
+								}
+							]
+						},
+						"description": "Get wallet history filtered by block range. Uses {{FROM_BLOCK}} and {{TO_BLOCK}} variables (default: 18000000 to 18000010)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get wallet history - Limit of 1",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?limit=1",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1",
+									"description": "Return only 1 transaction"
+								}
+							]
+						},
+						"description": "Get wallet history with limit set to 1 (boundary test)."
+					},
+					"response": []
+				}
+			],
+			"description": "Basic wallet history requests with various parameters"
+		},
+		{
+			"name": "Edge Cases - Error Scenarios",
+			"item": [
+				{
+					"name": "Invalid address format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/invalid-address/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"invalid-address",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								}
+							]
+						},
+						"description": "Test with invalid wallet address format. Should return 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Empty wallet address (zero address)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/0x0000000000000000000000000000000000000000/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"0x0000000000000000000000000000000000000000",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								}
+							]
+						},
+						"description": "Test with zero address (empty wallet)."
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid chain parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=invalid_chain",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "invalid_chain",
+									"description": "Invalid chain name"
+								}
+							]
+						},
+						"description": "Test with invalid chain parameter. Should return 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Negative limit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?limit=-1",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "-1",
+									"description": "Negative limit (invalid)"
+								}
+							]
+						},
+						"description": "Test with negative limit value. Should return 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Limit exceeding maximum",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response contains error message about limit maximum\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"    pm.expect(jsonData.message.toLowerCase()).to.include('maximum of 100');",
+									"    pm.expect(jsonData.message.toLowerCase()).to.include('admin.moralis.io');",
+									"    pm.expect(jsonData.message.toLowerCase()).to.include('upgrade your plan');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?limit=10000",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10000",
+									"description": "Limit exceeding maximum allowed value (max is 100)"
+								}
+							]
+						},
+						"description": "Test with limit exceeding maximum allowed value (100). Should return 400 Bad Request with error message about maximum limit."
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid block range (from_block > to_block)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?from_block=18000010&to_block=18000000",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "from_block",
+									"value": "18000010",
+									"description": "Start block (greater than end block)"
+								},
+								{
+									"key": "to_block",
+									"value": "18000000",
+									"description": "End block (less than start block)"
+								}
+							]
+						},
+						"description": "Test with invalid block range where from_block > to_block."
+					},
+					"response": []
+				},
+				{
+					"name": "Very large block number",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?from_block=999999999&to_block=999999999",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "from_block",
+									"value": "999999999",
+									"description": "Very large block number"
+								},
+								{
+									"key": "to_block",
+									"value": "999999999",
+									"description": "Very large block number"
+								}
+							]
+						},
+						"description": "Test with very large block numbers (boundary test)."
+					},
+					"response": []
+				},
+				{
+					"name": "Missing API Key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								}
+							]
+						},
+						"description": "Test without X-API-Key header. Should return 401 Unauthorized."
+					},
+					"response": []
+				}
+			],
+			"description": "Edge cases and error scenarios for wallet history API"
+		},
+		{
+			"name": "Data Validation",
+			"item": [
+				{
+					"name": "Validate transaction structure",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains transactions\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result).to.be.an('array');",
+									"    pm.expect(jsonData.result.length).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test(\"Each transaction has valid hash\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.result.forEach(function(tx) {",
+									"        pm.expect(tx.hash).to.match(/^0x[a-fA-F0-9]{64}$/);",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"Each transaction has valid from_address\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.result.forEach(function(tx) {",
+									"        pm.expect(tx.from_address).to.match(/^0x[a-fA-F0-9]{40}$/);",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"Each transaction has valid block_hash\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.result.forEach(function(tx) {",
+									"        pm.expect(tx.block_hash).to.match(/^0x[a-fA-F0-9]{64}$/);",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"Transactions are ordered by block number descending\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    for (var i = 0; i < jsonData.result.length - 1; i++) {",
+									"        var currentBlock = parseInt(jsonData.result[i].block_number, 16);",
+									"        var nextBlock = parseInt(jsonData.result[i + 1].block_number, 16);",
+									"        pm.expect(currentBlock).to.be.at.least(nextBlock);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								}
+							]
+						},
+						"description": "Validate transaction data structure, format, and ordering."
+					},
+					"response": []
+				},
+				{
+					"name": "Validate transaction numeric fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"First transaction has valid numeric fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result.length > 0) {",
+									"        var tx = jsonData.result[0];",
+									"        ",
+									"        // Validate all numeric fields are valid hex numbers",
+									"        var numericFields = ['nonce', 'transaction_index', 'value', 'gas', 'gas_price', 'receipt_cumulative_gas_used', 'receipt_gas_used', 'block_number'];",
+									"        numericFields.forEach(function(field) {",
+									"            var value = parseInt(tx[field], 16);",
+									"            pm.expect(value).to.be.a('number');",
+									"            pm.expect(value).to.be.at.least(0);",
+									"        });",
+									"        ",
+									"        // Validate gas_used <= gas limit",
+									"        var gasLimit = parseInt(tx.gas, 16);",
+									"        var gasUsed = parseInt(tx.receipt_gas_used, 16);",
+									"        pm.expect(gasUsed).to.be.at.most(gasLimit);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								}
+							]
+						},
+						"description": "Validate numeric fields in transaction data (nonce, gas, value, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate block timestamp format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Block timestamp is valid ISO date\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result.length > 0) {",
+									"        var tx = jsonData.result[0];",
+									"        var timestamp = new Date(tx.block_timestamp);",
+									"        pm.expect(timestamp.getTime()).to.not.be.NaN;",
+									"        pm.expect(timestamp).to.be.below(new Date());",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								}
+							]
+						},
+						"description": "Validate block timestamp is a valid ISO 8601 date format."
+					},
+					"response": []
+				},
+				{
+					"name": "Validate receipt status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Receipt status is 0 or 1\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.result.forEach(function(tx) {",
+									"        pm.expect(tx.receipt_status).to.match(/^[01]$/);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{MORALIS_API_KEY}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/wallets/{{WALLET_ADDRESS}}/history?chain=eth",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"wallets",
+								"{{WALLET_ADDRESS}}",
+								"history"
+							],
+							"query": [
+								{
+									"key": "chain",
+									"value": "eth"
+								}
+							]
+						},
+						"description": "Validate receipt_status is either '0' (failed) or '1' (successful)."
+					},
+					"response": []
+				}
+			],
+			"description": "Data validation tests for transaction fields and formats"
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "https://deep-index.moralis.io/api/v2.2",
+			"type": "string"
+		},
+		{
+			"key": "WALLET_ADDRESS",
+			"value": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+			"type": "string",
+			"description": "Test wallet address (Vitalik's address)"
+		},
+		{
+			"key": "MORALIS_API_KEY",
+			"value": "",
+			"type": "string",
+			"description": "Your Moralis API Key - Set this in Postman environment"
+		},
+		{
+			"key": "FROM_BLOCK",
+			"value": "18000000",
+			"type": "string",
+			"description": "Start block number for block range queries"
+		},
+		{
+			"key": "TO_BLOCK",
+			"value": "18000010",
+			"type": "string",
+			"description": "End block number for block range queries"
+		}
+	]
+}
+

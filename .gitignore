@@ -1,0 +1,5 @@
+.env
+node_modules
+test-results
+.DS_Store
+@rerun.txt
